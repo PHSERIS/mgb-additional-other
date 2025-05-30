@@ -1,10 +1,24 @@
  # MGB Ad hoc Field - Additional Other - Oracle Flex Field
+ 
+The module includes two action-tags: @MAKE-A-LIST AND @ADHOCFIELD.
+Both provide the functionality of adding additional fields on-the-fly, but the former does it for bio portal fields, and the latter for drop down menu fields.
+Use this module to create  list of bio portal field values. See below for more details.
 
- The module provides means for adding ad hoc fields in case the user must include multiple answers for the same question. The functionality is an homage to Oracle's Flex Field functionality. Currently, the ad hoc field is limited to collect data when an option of 'Other' has been selected in a multiple choice field (dropdown field).
+Also, the module provides means for adding ad hoc fields in case the user must include multiple answers for the same question. The functionality is an homage to Oracle's Flex Field functionality. Currently, the ad hoc field is limited to collect data when an option of 'Other' has been selected in a multiple choice field (dropdown field).
 
 ***
 
-## How To Use
+
+
+```php
+@MAKE-A-LIST(type, field)
+```
+where:
+1. type = "bioportal"
+2. field = field-name-set-to-bioportal-field
+1. example: @MAKE-A-LIST(bioportal, bioportal_field)
+
+## How To Use the ADHOCFIELD Action Tag
 
 It is a common practice to have a dropdown field containing an option for "Other" for allowing the participant to manually enter an answer, in a text box field, if the prebuilt answers do not apply to them. 
 It is this the setup needed for using an ad hoc Field, i.e. if the user is expected to provide more than one answer to "other",  adding the ad hoc action tag transforms the "other text field" in a field that can be repeated and added on-demand.
@@ -17,6 +31,10 @@ where:
  1. 'source-field' is the multiple choice field name that contains an option for 'other' (or its equivalent), 
  1. 'code-value' is the code given to the field's option of 'other' (can be a string or numeric), and 
  1. 'max-instances' is the limit of additional entries the user is allowed to use.
+
+type = "bioportal" or "other"
+for "bioportal":
+@MAKE-A-LIST(bioportal, bioportal-field)
 
 ## Where Does the Data Go?
 

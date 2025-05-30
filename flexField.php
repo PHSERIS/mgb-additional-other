@@ -1,6 +1,7 @@
 <?php
 namespace MGB\flexField;
 
+include 'traits/mgbActionTagMethods.php';
 include "common/actionTagHelper.php";
 use \REDCap as REDCap;
 use \RedCapDB as RedCapDB;
@@ -14,6 +15,9 @@ use \PhpOffice\PhpSpreadsheet\IOFactory as IOFactory;
 
 class flexField extends \ExternalModules\AbstractExternalModule
 {
+    use mgbActionTagMethods;
+    protected const NEW_ACTION_TAG = '@MAKE-A-LIST';
+    public const flexfield = "";
     /***
      * Goal: implement an oracle flex field, i.e. a text field that can store structured data, i.e. comma delimited or JSON.
      * Use-case: allow saving a dynamic medication list on-the-fly on the same form.
@@ -29,17 +33,58 @@ class flexField extends \ExternalModules\AbstractExternalModule
      *          - @FLEXFIELD=(Primary field,other-option-code-value,limit)
      */
 
+//    function __construct()
+//    {
+//        parent::__construct();
+//
+//        // ADD SOME CONTEXT TO THE GLOBALS FOR THIS MODULE:
+//        $this->modulesActionTagName = "@ADHOCFIELD";
+//    }
+
     function setter()
     {
         // Defining the Action Tag Name
         $this->modulesActionTagName = "@ADHOCFIELD";
     }
+
+    function getter()
+    {
+        return $this->fieldWithActionTag . ",". $this->sourceField;
+    }
     function redcap_data_entry_form_top($project_id, $record, $instrument, $event_id, $group_id, $repeat_instance)
     {
         global $Proj;
-
         $this->setter();
+        //---------------------------------------
+//        var_dump($this->getFieldsWithThisActionTag(static::NEW_ACTION_TAG, $instrument, $Proj));
+        $flexFieldBucket = $this->getFieldsWithThisActionTag(static::NEW_ACTION_TAG, $instrument, $Proj);
+//        var_dump($flexFieldBucket);
+        if(!is_null($flexFieldBucket)) {
+//            var_dump($flexFieldBucket);
+            $this->fieldWithActionTag = array_key_first($flexFieldBucket);
+//            var_dump($this->fieldWithActionTag);
+            $flexFieldParams =$flexFieldBucket[$this->fieldWithActionTag]['params'];
+            $flexFieldParams = str_replace("(", "", $flexFieldParams);
+            $flexFieldParams = str_replace(")", "", $flexFieldParams);
+            $flexFieldParams =  explode(",", $flexFieldParams);
+//            var_dump($flexFieldParams);
+            $flexFieldType = $flexFieldParams[0];
+            if($flexFieldType == "bioportal"){
+                $this->sourceField = $flexFieldParams[1];
+                ?>
+                <span style="visibility: hidden"><input type="text" id="makeAListOnThisField" value="<?=$this->getter()?>"></span>
+                <!--                    <script type="text/javascript" charset="utf8" src="--><?php //echo $this->getUrl('js/sample.js'); ?><!--"></script>-->
+                <script type="text/javascript" charset="utf8" src="<?php echo $this->getUrl('js/flexfield.js'); ?>"></script>
+                <?php
+            }
+        }
+
+        //---------------------------------------
+
         $flexFields = getFieldsWithThisActionTag($this->modulesActionTagName, $instrument, $Proj);
+//        print "<pre>";
+//        var_dump($flexFields);
+//        print "</pre>";
         $item = 0;
         foreach($flexFields as $fieldName=>$properties){
 
@@ -82,7 +127,7 @@ class flexField extends \ExternalModules\AbstractExternalModule
         } else {
             $existingValues = explode("|",$existingValues);
             $currentCount = count($existingValues) + 1;
-            $existingValues = $this->escape(array_reverse($existingValues));
+            $existingValues = array_reverse($existingValues);
             $existingValues = "'" . implode("','",$existingValues) . "'";
         }
 
@@ -106,17 +151,22 @@ class flexField extends \ExternalModules\AbstractExternalModule
 	    $('[name={$flexFieldName}]').val(flexString);
 	}
      // I think the rendering code, for existing values, goes here
+     var plusButtonFlag = false;
+     console.log(plusButtonFlag)
      var counter = $currentCount;
      var limit = $limitCount;
           $("select[name={$fieldName}]").blur(function () {
-              console.log("Blur on field: " + $(this).prop('name') + "this is its value's length: " + $(this).val().length);
-              if($(this).val() == $expectedValue && $('#addButton').length < 1){
+              console.log("Blur on field: " + $(this).prop('name') + " this is its value's length: " + $(this).val().length);
+              console.log(plusButtonFlag);
+              if($(this).val() == $expectedValue && plusButtonFlag === false){
+              // if($(this).val() == $expectedValue){
                   console.log('condition met; expected value was selected');
                   // Add the .hide() to the next line when ready to deploy
                   // i.e., $('input[name={flexFieldName}]').after(
                   $('input[name={$flexFieldName}]').hide().after("<div class=\"row ffInstance\"> <div id=\"test1\"> <input aria-labelledby=\"label-select_project\" class=\"x-form-text x-form-field flexfield\" type=\"text\"	name=\"flexfield1\" tabindex=\"0\">" +
     " <button type=\"button\" class=\"btn btn-info btn-sm\" id=\"addButton\" style=\"padding: 1px 1px 1px 1px;\"><i class=\"fas fa-plus-circle\"></i></button> </div></div>")
                   // attached the on.blur script to the newly created element
+                  plusButtonFlag = true;
                     $('[name=flexfield1]').blur(function () {
                         getValues02();        
                     }); 
@@ -227,6 +277,7 @@ $('.flexfield').blur(function () {
     let bucketFlexField = [$existingValues];
     if(bucketFlexField.length > 0 && bucketFlexField[0].length > 0){
         bucketFlexField.forEach(myFunction);
+        plusButtonFlag = true;
     }
  })
             </script>
@@ -257,7 +308,31 @@ SCRIPT;
             print $this->flexFieldTriggerCondition($flexFieldSource,$otherOptionCodeValue,$fieldName,$retrievedData,$limitCount);
 
         }
-    }
+        //---------------------------------------
+//        var_dump($this->getFieldsWithThisActionTag(static::NEW_ACTION_TAG, $instrument, $Proj));
+        $flexFieldBucket = $this->getFieldsWithThisActionTag(static::NEW_ACTION_TAG, $instrument, $Proj);
+//        var_dump($flexFieldBucket);
+        if(!is_null($flexFieldBucket)) {
+//            var_dump($flexFieldBucket);
+            $this->fieldWithActionTag = array_key_first($flexFieldBucket);
+//            var_dump($this->fieldWithActionTag);
+            $flexFieldParams =$flexFieldBucket[$this->fieldWithActionTag]['params'];
+            $flexFieldParams = str_replace("(", "", $flexFieldParams);
+            $flexFieldParams = str_replace(")", "", $flexFieldParams);
+            $flexFieldParams =  explode(",", $flexFieldParams);
+//            var_dump($flexFieldParams);
+            $flexFieldType = $flexFieldParams[0];
+            if($flexFieldType == "bioportal"){
+                $this->sourceField = $flexFieldParams[1];
+                ?>
+                <span style="visibility: hidden"><input type="text" id="makeAListOnThisField" value="<?=$this->getter()?>"></span>
+                <!--                    <script type="text/javascript" charset="utf8" src="--><?php //echo $this->getUrl('js/sample.js'); ?><!--"></script>-->
+                <script type="text/javascript" charset="utf8" src="<?php echo $this->getUrl('js/flexfield.js'); ?>"></script>
+                <?php
+            }
+        }
 
+        //---------------------------------------
+    }
 }
 

@@ -1,5 +1,5 @@
 {
-  "name": "MGB Ad hoc Field - Additional Other - Oracle Flex Field",
+  "name": "MGB Ad hoc Field - Additional Other - Make a List - Oracle Flex Field",
 
   "namespace":"MGB\\flexField",
 
@@ -12,6 +12,10 @@
       "tag": "@ADHOCFIELD",
       "description": "Add an ad hoc text field when the user is expected to provide multiple answers for the same question, i.e. other medications, additional lab values, etc. Add this action tag to a multiple choice field (Dropdown Field) and specify the code of its 'Other' option; the ad hoc field will be displayed when the user selects the field's 'Other' option. For example, add @ADHOCFIELD(source-field,code-value,max-instances), where: 1) 'source-field' is the multiple choice field name that contains an option for 'other' (or its equivalent), 2) 'code-value' is the code given to the field's option of 'other' (can be a string or numeric), and 3) max-instances is the limit of additional entries the user is allowed to use."
     }
+  ],
+
+  "no-auth-pages": [
+    "js/flexfield.php"
   ],
 
   "authors": [
